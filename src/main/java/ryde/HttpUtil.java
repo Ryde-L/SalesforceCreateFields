@@ -14,7 +14,7 @@ public class HttpUtil {
             System.out.println("请求响应："+body);
             return body.contains("\"success\":true");
         }catch (Exception e){
-//            e.printStackTrace();
+            e.printStackTrace();
             return false;
         }
     }
