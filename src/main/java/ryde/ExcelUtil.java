@@ -7,6 +7,7 @@ import org.apache.poi.xssf.usermodel.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -62,28 +63,30 @@ public class ExcelUtil {
                     continue;
                 if(row.getCell(titleMap.get("创建状态"))!=null && "成功".equals(row.getCell(titleMap.get("创建状态")).toString()))
                     continue;
-                entity.fullName = objectName + "." + FieldNameUtil.toCamelCase(row.getCell(titleMap.get("API")).toString())+"__c";
+//                entity.fullName = objectName + "." + FieldNameUtil.toCamelCase(row.getCell(titleMap.get("API")).toString())+"__c";
+                entity.fullName = objectName + "." + row.getCell(titleMap.get("API")).toString();
                 entity.metadata.label = row.getCell(titleMap.get("标签")).toString();
                 System.out.print(entity.metadata.label);
                 entity.metadata.type = row.getCell(titleMap.get("类型")).toString();//英文type
 
                 if (entity.metadata.type.contains("Text"))//文本/文本区/富文本
                     entity.metadata.length = Double.valueOf(row.getCell(titleMap.get("长度")).toString()).intValue();
-                else if (entity.metadata.type.equalsIgnoreCase("Number") || entity.metadata.type.equalsIgnoreCase("Currency")) {
+                else if (entity.metadata.type.equalsIgnoreCase("Number") || entity.metadata.type.equalsIgnoreCase("Currency") || entity.metadata.type.equalsIgnoreCase("Percent")) {
                     //数字/币种
                     String[] precisionAndScale = row.getCell(titleMap.get("长度")).toString().split(",");
                     entity.metadata.precision = Integer.parseInt(precisionAndScale[0]) + Integer.parseInt(precisionAndScale[1]);//总长度
                     entity.metadata.scale = Integer.valueOf(precisionAndScale[1]);//精度
                 } else if (entity.metadata.type.equalsIgnoreCase("Picklist")) {
                     //单项列表
-                    String[] pickValue = row.getCell(titleMap.get("选项列表值")).toString().split(";");
+                    String[] pickValue_LabelAndApi = row.getCell(titleMap.get("选项列表值")).toString().split(";");
                     entity.metadata.valueSet = new ValueSet();
-                    
-                    ValueSet.ValueSetDefinition.Value[] values = new ValueSet.ValueSetDefinition.Value[pickValue.length];
-                    for (int j = 0; j < pickValue.length; j++) {
+                    ValueSet.ValueSetDefinition.Value[] values = new ValueSet.ValueSetDefinition.Value[pickValue_LabelAndApi.length];
+                    for (int j = 0; j < pickValue_LabelAndApi.length; j++) {
                         ValueSet.ValueSetDefinition.Value v = new ValueSet.ValueSetDefinition.Value();
-                        v.label = pickValue[j];
-                        v.valueName = pickValue[j];
+                        String[] labelAndApi = pickValue_LabelAndApi[j].split("\\&");
+                        System.out.println(Arrays.toString(labelAndApi));
+                        v.label = labelAndApi[0];
+                        v.valueName = labelAndApi.length == 2 ? labelAndApi[1] : labelAndApi[0];
                         values[j] = v;
                     }
                     entity.metadata.valueSet.valueSetDefinition.value = values;
